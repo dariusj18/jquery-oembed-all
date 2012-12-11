@@ -544,11 +544,12 @@
 	new $.fn.oembed.OEmbedProvider("SmugMug", "photo", ["smugmug.com/[-.\\w@]+/.+"], "http://api.smugmug.com/services/oembed/"),
 
     new $.fn.oembed.OEmbedProvider("dribbble", "photo", ["dribbble.com/shots/.+"], "http://api.dribbble.com/shots/$1?callback=?",
-      { templateRegex:/.*shots\/([\d]+).*/,
-      templateData : function(data){if(!data.image_teaser_url)return false;
-          return  '<img src="'+data.image_teaser_url+'"/>';
-        }
-      }),
+		{templateRegex:/.*shots\/([\d]+).*/,
+			templateData : function(data){
+			  if(!data.image_teaser_url)return false;
+			  return  '<img src="'+data.image_teaser_url+'"/>';
+			}
+		}),
     new $.fn.oembed.OEmbedProvider("chart.ly", "photo", ["chart\\.ly/[a-z0-9]{6,8}"],"http://chart.ly/uploads/large_$1.png",
       {templateRegex:/.*ly\/([^\/]+).*/ , embedtag : {tag:'img'},nocache:1}), 
     new $.fn.oembed.OEmbedProvider("circuitlab", "photo", ["circuitlab.com/circuit/.+"],"https://www.circuitlab.com/circuit/$1/screenshot/540x405/",
