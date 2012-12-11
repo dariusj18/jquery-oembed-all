@@ -9,8 +9,8 @@
  * experience
  */
 (function($) {
-    $.fn.oembed = function(url, options, embedAction) {
-
+    $.fn.oembed = function(url, options, embedAction) 
+	{
         settings = $.extend(true, $.fn.oembed.defaults, options);
         var shortURLList = ["0rz.tw","1link.in","1url.com","2.gp","2big.at","2tu.us","3.ly","307.to","4ms.me","4sq.com","4url.cc","6url.com","7.ly","a.gg","a.nf","aa.cx","abcurl.net",
 							"ad.vu","adf.ly","adjix.com","afx.cc","all.fuseurl.com","alturl.com","amzn.to","ar.gy","arst.ch","atu.ca","azc.cc","b23.ru","b2l.me","bacn.me","bcool.bz","binged.it",
@@ -39,8 +39,8 @@
 
         if ($('#jqoembeddata').length === 0) $('<span id="jqoembeddata"></span>').appendTo('body');
 
-        return this.each(function() {
-
+        return this.each(function() 
+		{
             var container = $(this),
                 resourceURL =  (url && (!url.indexOf('http://') || !url.indexOf('https://'))) ? url : container.attr("href"),
                 provider;
@@ -54,11 +54,20 @@
                 };
             }
 
-            if (resourceURL !== null) {
+            if (resourceURL !== null) 
+			{
+				//Check if Youtube
+				var rg1 = new RegExp("youtube\\.com/watch.+v=[\\w-]+&?");
+				var rg2 = new RegExp("youtu\\.be/[\\w-]+");
+				if ((rg1.test(resourceURL) || rg2.test(resourceURL))) {
+					resourceURL = parseQueryStringYoutube(resourceURL);
+				}
+			
 				//Check if shorten URL
-				for (var j = 0, l =shortURLList.length; j < l; j++) {
+				for (var j = 0, l=shortURLList.length; j < l; j++) {
 					var regExp = new RegExp('://'+shortURLList[j]+'/', "i");
 					if (resourceURL.match(regExp) !== null) {
+					debug("ajax");
 					//AJAX to http://api.longurl.org/v2/expand?url=http://bit.ly/JATvIs&format=json&callback=hhh
 					var ajaxopts = $.extend({
 						  url: "http://api.longurl.org/v2/expand",
@@ -125,12 +134,43 @@
     };
 
     /* Private functions */
+	/*
+	* Method that performs a parse the parameters of a url.
+	* @param url.
+	* @return The url correct.
+	* 
+	* example 1:
+	*  http://www.youtube.com/watch?feature=player_embedded&v=FvbCV6E0Wro
+	*
+	*  http://www.youtube.com/watch?v=FvbCV6E0Wro&feature=player_embedded
+	*/
+	function parseQueryStringYoutube(url)
+	{
+	    var querystring = url.split("?");
+		var q1 = querystring[0]; // url
+		var q2 = querystring[1]; // params
+		if (!q1 || !q2) return url;
+		var items = q2.split('&');
+		
+		var other_param="", v_param="";
+		var len = items.length;
+		for (var i=0; i<len; i++) 
+		{
+		    var params = items[i];
+			var pair = params.split('=');
+			if (pair[0] == "v") v_param = items[i] + "&";
+			else other_param += items[i];		
+		}
+		return (q1 + "?" + v_param + "" + other_param);
+	}
+		
     function rand(length,current){ //Found on http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
      current = current ? current : '';
      return length ? rand( --length , "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz".charAt( Math.floor( Math.random() * 60 ) ) + current ) : current;
     }
     
-    function getRequestUrl(provider, externalUrl) {
+    function getRequestUrl(provider, externalUrl) 
+	{
         var url = provider.apiendpoint,
             qs = "",
             i;
@@ -158,14 +198,16 @@
 
         return url;
     }
-    function success(oembedData, externalUrl, container) {
+    function success(oembedData, externalUrl, container) 
+	{
         $('#jqoembeddata').data(externalUrl, oembedData.code);
         settings.beforeEmbed.call(container, oembedData);
         settings.onEmbed.call(container, oembedData);
         settings.afterEmbed.call(container, oembedData);
     }
 
-    function embedCode(container, externalUrl, embedProvider) {
+    function embedCode(container, externalUrl, embedProvider) 
+	{
       if ($('#jqoembeddata').data(externalUrl)!=undefined && embedProvider.embedtag.tag!='iframe'){
         var oembedData = {code: $('#jqoembeddata').data(externalUrl)};
         success(oembedData, externalUrl, container);
@@ -229,7 +271,9 @@
         }, settings.ajaxOptions || {});
         
         $.ajax(ajaxopts);
-      }else if (embedProvider.templateRegex) {
+      }
+	  else if (embedProvider.templateRegex) 
+	  {
         if(embedProvider.embedtag.tag!==''){
           var flashvars = embedProvider.embedtag.flashvars || '';
           var tag = embedProvider.embedtag.tag || 'embed';
@@ -239,8 +283,7 @@
           var src =externalUrl.replace(embedProvider.templateRegex,embedProvider.apiendpoint);
           if(!embedProvider.nocache) src += '&jqoemcache='+rand(5);
           if (embedProvider.apikey) src = src.replace('_APIKEY_', settings.apikeys[embedProvider.name]);
-          
-           
+               
           var code = $('<'+tag+'/>')
             .attr('src',src)
             .attr('width',width)
@@ -310,7 +353,8 @@
       }
     };
 
-    function getNormalizedParams(params) {
+    function getNormalizedParams(params) 
+	{
         if (params === null) return null;
         var key, normalizedParams = {};
         for (key in params) {
@@ -320,7 +364,8 @@
     }
 
     /* Public functions */
-    $.fn.oembed.insertCode = function(container, embedMethod, oembedData) {
+    $.fn.oembed.insertCode = function(container, embedMethod, oembedData) 
+	{
         if (oembedData === null) return;
         if(embedMethod=='auto' && container.attr("href") !== null) embedMethod='append';
         else if(embedMethod=='auto') embedMethod='replace';
@@ -335,7 +380,8 @@
               container.wrap('<div class="oembedall-container"></div>');
               var oembedContainer = container.parent();
 			  if (settings.includeHandle) {
-				  $('<span class="oembedall-closehide">&darr;</span>').insertBefore(container).click(function() {
+				  $('<span class="oembedall-closehide">&darr;</span>').insertBefore(container).click(function() 
+				  {
 					  var encodedString = encodeURIComponent($(this).text());
 					  $(this).html((encodedString == '%E2%86%91') ? '&darr;' : '&uarr;');
 					  $(this).parent().children().last().toggle();
@@ -352,7 +398,8 @@
               * If parent div width greater thans embed iframe use the max widht
               * - works on youtubes and vimeo
               */
-              if(settings.maxWidth){
+              if(settings.maxWidth)
+			  {
                   var post_width =  oembedContainer.parent().width();
                   if(post_width < settings.maxWidth)
                   {
@@ -374,7 +421,8 @@
         }
     };
 
-    $.fn.oembed.getPhotoCode = function(url, oembedData) {
+    $.fn.oembed.getPhotoCode = function(url, oembedData) 
+	{
         var code, alt = oembedData.title ? oembedData.title : '';
         alt += oembedData.author_name ? ' - ' + oembedData.author_name : '';
         alt += oembedData.provider_name ? ' - ' + oembedData.provider_name : '';
@@ -383,19 +431,22 @@
         return code;
     };
 
-    $.fn.oembed.getRichCode = function(url, oembedData) {
+    $.fn.oembed.getRichCode = function(url, oembedData) 
+	{
         var code = oembedData.html;
         return code;
     };
 
-    $.fn.oembed.getGenericCode = function(url, oembedData) {
+    $.fn.oembed.getGenericCode = function(url, oembedData) 
+	{
         var title = (oembedData.title !== null) ? oembedData.title : url,
             code = '<a href="' + url + '">' + title + '</a>';
         if (oembedData.html) code += "<div>" + oembedData.html + "</div>";
         return code;
     };
 
-    $.fn.oembed.getOEmbedProvider = function(url) {
+    $.fn.oembed.getOEmbedProvider = function(url) 
+	{
         for (var i = 0; i < $.fn.oembed.providers.length; i++) {
             for (var j = 0, l =$.fn.oembed.providers[i].urlschemes.length; j < l; j++) {
                 var regExp = new RegExp($.fn.oembed.providers[i].urlschemes[j], "i");
@@ -405,7 +456,8 @@
         return null;
     };
 
-    $.fn.oembed.OEmbedProvider = function(name, type, urlschemesarray, apiendpoint, extraSettings) {
+    $.fn.oembed.OEmbedProvider = function(name, type, urlschemesarray, apiendpoint, extraSettings) 
+	{
         this.name = name;
         this.type = type; // "photo", "video", "link", "rich", null
         this.urlschemes = urlschemesarray;
