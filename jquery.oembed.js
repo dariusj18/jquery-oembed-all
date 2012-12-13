@@ -172,6 +172,58 @@
         }
         return (q1 + "?" + v_param + "" + other_param);
     }
+	
+	/*
+    * Method that extracts the parameter fbid a url.
+    * @param url.
+    * @return The url correct.
+    * 
+    * example 1:
+	* externalUrl: https://www.facebook.com/photo.php?fbid=10151276322130768&set=a.207245160767.130755.5170395767&type=1&theater 
+    *  GET https://graph.facebook.com/photo.php?fbid=10151276322130768&set=a.207245160767.130755.5170395767&type=1&theater/?callback=jQuery16106564851657021791_1355421927948&_=1355421929219 
+	 *  --> 404 (Not Found) 
+	*
+	* externalUrl: https://www.facebook.com/photo.php?fbid=10151276322130768&set=a.207245160767.130755.5170395767&type=1&theater 
+    *  GET https://graph.facebook.com/10151276322130768 
+    */
+    function parseQueryStringFbid(url)
+    {
+        var querystring = url.split("?");
+        var q1 = querystring[0]; // url
+        var q2 = querystring[1]; // params
+        if (!q1 || !q2) return url;
+		var root = dirname(q1);
+        var items = q2.split('&');
+
+        var fbid="";
+        for (var i in items) 
+        {
+            var params = items[i];
+            var pair = params.split('=');
+            if (pair[0] == "fbid") { fbid = pair[1]; break; }
+        }
+        return (root + "/" + fbid);
+    }
+	
+	/*
+	* basename
+	* @param path.
+    * @return The basename correct.
+	*/
+	function basename(path) 
+	{
+		return path.replace(/\\/g,'/').replace( /.*\//, '' );
+	}
+	
+	/*
+	* dirname
+	* @param path.
+    * @return The dirname correct.
+	*/
+	function dirname(path) 
+	{
+		return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');
+	}
 
     /*
     * Found on http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
@@ -221,6 +273,9 @@
         settings.afterEmbed.call(container, oembedData);
     }
 
+	/*
+	*  embedCode
+	*/
     function embedCode(container, externalUrl, embedProvider) 
     {
         if (embedProvider.parseUrl) externalUrl = embedProvider.parseUrl(externalUrl);
@@ -283,7 +338,7 @@
                     result = embedProvider.yql.datareturn(meta);
                 }
                 else{
-                result = embedProvider.yql.datareturn ? embedProvider.yql.datareturn(data.query.results) : data.query.results.result;
+					result = embedProvider.yql.datareturn ? embedProvider.yql.datareturn(data.query.results) : data.query.results.result;
                 }
                 if(result===false)return;
                 var oembedData = $.extend({}, result);
@@ -330,21 +385,27 @@
             }
             else if (embedProvider.apiendpoint) 
             {
-            //Add APIkey if true
-            if (embedProvider.apikey) embedProvider.apiendpoint = embedProvider.apiendpoint.replace('_APIKEY_', settings.apikeys[embedProvider.name]);
-            ajaxopts = $.extend({
-                url: externalUrl.replace(embedProvider.templateRegex, embedProvider.apiendpoint),
-                dataType: 'jsonp',
-                success: function(data) 
-                {
-                var oembedData = $.extend({}, data);
-                oembedData.code = embedProvider.templateData(data);
-                success(oembedData, externalUrl, container);
-                },
-                error: settings.onError.call(container, externalUrl, embedProvider)
-                }, settings.ajaxOptions || {});
+				//Add APIkey if true
+				if (embedProvider.apikey) embedProvider.apiendpoint = embedProvider.apiendpoint.replace('_APIKEY_', settings.apikeys[embedProvider.name]);
 
-            $.ajax( ajaxopts );
+				var link;
+				var url = externalUrl.replace(embedProvider.templateRegex, embedProvider.apiendpoint);
+				if (embedProvider.getFbid) link = embedProvider.getFbid(url); // for facebook
+				else link = url;
+				
+				ajaxopts = $.extend({
+					url: link,
+					dataType: 'jsonp',
+					success: function(data) 
+					{
+						var oembedData = $.extend({}, data);
+						oembedData.code = embedProvider.templateData(data);
+						success(oembedData, externalUrl, container);
+					},
+					error: settings.onError.call(container, externalUrl, embedProvider)
+					}, settings.ajaxOptions || {});
+
+				$.ajax( ajaxopts );
             }
             else {
                 var oembedData = {code: externalUrl.replace(embedProvider.templateRegex,embedProvider.template)};
@@ -742,19 +803,29 @@
                 +'<p class="oembedall-updated-at">Last updated: '+data.data.pushed_at+'</p></div></div>';
             }
         }),
-    
-    new $.fn.oembed.OEmbedProvider("facebook", "rich", ["facebook.com/(people/[^\\/]+/\\d+|[^\\/]+$)"], "https://graph.facebook.com/$2$3/?callback=?"
-        ,{templateRegex:/.*facebook.com\/(people\/[^\/]+\/(\d+).*|([^\/]+$))/,
-            templateData : function(data){ if(!data.id)return false;
-                var out =  '<div class="oembedall-facebook1"><div class="oembedall-facebook2"><a href="http://www.facebook.com/">facebook</a> <a href="'+data.link+'">'+data.name+'</a></div><div class="oembedall-facebookBody"><div>';
-                if(data.picture) out += '<img src="'+data.picture+'" align="left"></div><div>';
-                if(data.category) out += 'Category  <strong>'+data.category+'</strong><br/>';
-                if(data.website) out += 'Website  <strong>'+data.website+'</strong><br/>';
-                if(data.gender) out += 'Gender  <strong>'+data.gender+'</strong><br/>';
-                out += '</div></div></div>';
-                return out;
-            }
-        }),
+
+	//facebook
+	new $.fn.oembed.OEmbedProvider("facebook", "rich", ["facebook.com/(people/[^\\/]+/\\d+|[^\\/]+$)"], "https://graph.facebook.com/$2$3/"
+		,{templateRegex:/.*facebook.com\/(people\/[^\/]+\/(\d+).*|([^\/]+$))/,
+		  templateData : function(data){ 
+			  var json_string = JSON.stringify(data); 
+			  //console.log(json_string);
+			  if(!data.id) return false;
+			  var name;
+			  if (data.from.name) name = data.from.name;
+			  else if (data.name) name = data.name;
+			  var out = '<div class="oembedall-facebook1"><div class="oembedall-facebook2"><a href="http://www.facebook.com/">facebook</a> <a href="'+data.link+'">'+name+'</a></div><div class="oembedall-facebookBody"><div>';
+			  if(data.picture) out += '<img src="'+data.picture+'" align="left"></div><div>';
+			  if(data.from.category) out += 'Category  <strong>'+data.from.category+'</strong><br/>';
+			  if(data.category) out += 'Category  <strong>'+data.category+'</strong><br/>';
+			  if(data.name) out += 'Name  <strong>'+data.name+'</strong><br/>';
+			  //if(data.icon) out += 'Icon  <img src="'+data.icon+'"><br/>';
+			  if(data.website) out += 'Website  <strong>'+data.website+'</strong><br/>';
+			  if(data.gender) out += 'Gender  <strong>'+data.gender+'</strong><br/>';
+			  out += '</div></div></div>';
+			  return out;
+			}
+		 , getFbid: parseQueryStringFbid}),
         
     new $.fn.oembed.OEmbedProvider("stackoverflow", "rich", ["stackoverflow.com/questions/[\\d]+"], "http://api.stackoverflow.com/1.1/questions/$1?body=true&jsonp=?"
         ,{templateRegex:/.*questions\/([\d]+).*/,
