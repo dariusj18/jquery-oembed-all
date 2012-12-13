@@ -814,8 +814,8 @@
 			  var name;
 			  if (data.from.name) name = data.from.name;
 			  else if (data.name) name = data.name;
-			  var out = '<div class="oembedall-facebook1"><div class="oembedall-facebook2"><a href="http://www.facebook.com/">facebook</a> <a href="'+data.link+'">'+name+'</a></div><div class="oembedall-facebookBody"><div>';
-			  if(data.picture) out += '<img src="'+data.picture+'" align="left"></div><div>';
+			  var out = '<div class="oembedall-facebook1"><div class="oembedall-facebook2"><a href="http://www.facebook.com/">facebook</a> <a href="'+data.link+'">'+name+'</a></div><div class="oembedall-facebookBody"><div class="oembedall-facebookBody-content">';
+			  if(data.picture) out += '<img class="oembedall-facebookBody-photo" src="'+data.picture+'" align="left"></div><div>';
 			  if(data.from.category) out += 'Category  <strong>'+data.from.category+'</strong><br/>';
 			  if(data.category) out += 'Category  <strong>'+data.category+'</strong><br/>';
 			  if(data.name) out += 'Name  <strong>'+data.name+'</strong><br/>';
@@ -823,6 +823,7 @@
 			  if(data.website) out += 'Website  <strong>'+data.website+'</strong><br/>';
 			  if(data.gender) out += 'Gender  <strong>'+data.gender+'</strong><br/>';
 			  out += '</div></div></div>';
+			  if(data.images) out += '<br/><div style="text-align:center;width:100%;border: 1px solid #cccccc;"><img class="oembedall-facebookBody-photo" src="'+data.images[0].source+'"></div>';
 			  return out;
 			}
 		 , getFbid: parseQueryStringFbid}),
