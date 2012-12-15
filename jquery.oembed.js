@@ -896,32 +896,95 @@
     new $.fn.oembed.OEmbedProvider("opengraph", "rich", [".*"], null,
     {yql:{xpath:"//meta|//title|//link", from:'html'
             , datareturn:function(results){
-                if(!results['og:title'] && results['title'] &&results['description'])results['og:title']=results['title'];
-                if(!results['og:title'] && !results['title'])return false;
-                var code = $('<p/>');
-                if(results['og:video']) 
+			
+/*	
+{"description":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
+"og:image":"http://pthumbnails.5min.com/10351989/517599432_3v1.jpg",
+"og:url":"http://on.aol.com/video/cringe-worthy-celebrity-interviews-of-2012--mashup--517599432",
+"og:title":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
+"og:type":"movie",
+"og:site_name":"aol.on",
+"og:description":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
+"og:video:width":"400","og:video:height":"255",
+"og:video:type":"application/x-shockwave-flash",
+"og:video":"http://embed.5min.com/517599432&autoStart=true",
+"og:video:secure_url":"https://embed.5min.com/517599432&autoStart=true",
+
+"fb:app_id":"197717190278167",
+
+"twitter:card":"player",
+"twitter:site":"@aolon",
+"twitter:url":"http://on.aol.com/video/cringe-worthy-celebrity-interviews-of-2012--mashup--517599432",
+"twitter:title":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
+"twitter:description":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
+"twitter:image":"http://pthumbnails.5min.com/10351989/517599432_3v1_262_262.jpg",
+"twitter:player":"https://embed.5min.com/517599432",
+"twitter:player:width":"400","twitter:player:height":"255",
+"video_width":"400","video_height":"255",
+"video_type":"application/x-shockwave-flash",
+"medium":"video","title":"AOL On - Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)"}
+*/
+			
+			  var json_string = JSON.stringify(results);
+              //if(data.error) { return JSON.stringify(data.error); }	  
+			  //console.log(json_string);
+			  //console.log(results['twitter:card']);
+                if(!results['og:title'] && !results['twitter:title'] && results['title'] && results['description']) results['og:title']=results['title'];
+                if(!results['og:title'] && !results['twitter:title'] && !results['title']) return false;
+                var code = $('<div class="oembed-og">');
+                if(results['og:video'] || results['twitter:card']=='player') 
                 {
-                    var embed = $('<embed src="'+results['og:video']+'"/>');
+                    var embed, type;					
+					var video_width, video_height, video_type;
+					// video
+					if (results['twitter:player']) embed = $('<embed src="'+results['twitter:player']+'"/>');
+					else var embed = $('<embed src="'+results['og:video']+'"/>');
+					// type
+					if (results['video_type']) type = results['video_type'];
+					else type = results['og:video:type'];
+					// video_width, video_height
+					if (results['video_width']) {video_width = results['video_width']; video_height = results['video_height'];}
+					else {video_width = results['og:video:width']; video_height = results['og:video:height'];}
+					
                     embed
-                        .attr('type',results['og:video:type'] || "application/x-shockwave-flash")
+                        .attr('type', type || "application/x-shockwave-flash" )
                         .css('max-height', settings.maxHeight || 'auto' )
                         .css('max-width', settings.maxWidth || 'auto' );
-                    if(results['og:video:width']) embed.attr('width',results['og:video:width']);
-                    if(results['og:video:height']) embed.attr('height',results['og:video:height']);
+                    if(video_width) embed.attr('width', video_width);
+                    if(video_height) embed.attr('height', video_height);
                     code.append(embed);
                 }
-                else if(results['og:image']) {
-                    var img = $('<img src="'+results['og:image']+'">');
+                else if(results['og:image'] || results['twitter:card']) //=='image'
+				{
+				    var img, image_width, image_height;
+					// img
+					if (results['twitter:image']) img = $('<img src="'+results['twitter:image']+'">');
+					else img = $('<img src="'+results['og:image']+'">');
+					
                     img.css('max-height', settings.maxHeight || 'auto' ).css('max-width', settings.maxWidth || 'auto' );
-                    if(results['og:image:width']) img.attr('width',results['og:image:width']);
-                    if(results['og:image:height']) img.attr('height',results['og:image:height']);
+					
+					// image_width, image_height
+					if (results['image_width']) {image_width = results['image_width']; image_height = results['image_height'];}
+					else {image_width = results['og:image:width']; image_height = results['og:image:height'];}
+					
+                    if(image_width) img.attr('width', image_width);
+                    if(image_height) img.attr('height', image_height);
                     code.append(img);
                 }
-                if(results['og:title']) code.append('<b>'+results['og:title']+'</b><br/>');
-                if(results['og:description'])
-                code.append(results['og:description']+'<br/>');
-                else if(results['description'])
-                code.append(results['description']+'<br/>');
+                code.append('<br/>');
+				var title, description;
+				// title
+				if (results['twitter:title']) title = results['twitter:title'];
+				else if(results['og:title']) title = results['og:title'];
+				else if(results['title']) title = results['title'];
+				// description
+				if (results['twitter:description']) description = results['twitter:description']
+				else if(results['og:description']) description = results['og:description']
+                else if(results['description']) description = results['description']
+				// output
+				code.append('<b>'+title+'</b><br/>');
+				if (title!=description) code.append(description+'<br/>');
+				
                 return code;
             }
         }
