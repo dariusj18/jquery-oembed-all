@@ -387,13 +387,14 @@
             {
 				//Add APIkey if true
 				if (embedProvider.apikey) embedProvider.apiendpoint = embedProvider.apiendpoint.replace('_APIKEY_', settings.apikeys[embedProvider.name]);
-
+				console.log(">embedProvider.apiendpoint");
 				var link;
 				var url = externalUrl.replace(embedProvider.templateRegex, embedProvider.apiendpoint);
 				if (embedProvider.getFbid) link = embedProvider.getFbid(url); // for facebook
 				else link = url;
 				
 				ajaxopts = $.extend({
+				type: "POST",  
 					url: link,
 					dataType: 'jsonp',
 					success: function(data) 
@@ -808,22 +809,27 @@
 	new $.fn.oembed.OEmbedProvider("facebook", "rich", ["facebook.com/(people/[^\\/]+/\\d+|[^\\/]+$)"], "https://graph.facebook.com/$2$3/"
 		,{templateRegex:/.*facebook.com\/(people\/[^\/]+\/(\d+).*|([^\/]+$))/,
 		  templateData : function(data){ 
-			  var json_string = JSON.stringify(data); 
+			  var json_string = JSON.stringify(data);
+              if(data.error) { return JSON.stringify(data.error); }	  
 			  //console.log(json_string);
 			  if(!data.id) return false;
 			  var name;
-			  if (data.from.name) name = data.from.name;
+			  if(data.from) {if (data.from.name) name = data.from.name;}
 			  else if (data.name) name = data.name;
 			  var out = '<div class="oembedall-facebook1"><div class="oembedall-facebook2"><a href="http://www.facebook.com/">facebook</a> <a href="'+data.link+'">'+name+'</a></div><div class="oembedall-facebookBody"><div class="oembedall-facebookBody-content">';
 			  if(data.picture) out += '<img class="oembedall-facebookBody-photo" src="'+data.picture+'" align="left"></div><div>';
-			  if(data.from.category) out += 'Category  <strong>'+data.from.category+'</strong><br/>';
+			  else if(data.cover){ if(data.cover.source) out += '<img class="oembedall-facebookBody-photo" src="'+data.cover.source+'" align="left"></div><div>';}		  
+			  if(data.from) {if(data.from.category) out += 'Category  <strong>'+data.from.category+'</strong><br/>';}
 			  if(data.category) out += 'Category  <strong>'+data.category+'</strong><br/>';
 			  if(data.name) out += 'Name  <strong>'+data.name+'</strong><br/>';
 			  //if(data.icon) out += 'Icon  <img src="'+data.icon+'"><br/>';
 			  if(data.website) out += 'Website  <strong>'+data.website+'</strong><br/>';
-			  if(data.gender) out += 'Gender  <strong>'+data.gender+'</strong><br/>';
-			  out += '</div></div></div>';
-			  if(data.images) out += '<br/><div style="text-align:center;width:100%;border: 1px solid #cccccc;"><img class="oembedall-facebookBody-photo" src="'+data.images[0].source+'"></div>';
+
+			if(data.gender) out += 'Gender  <strong>'+data.gender+'</strong><br/>';
+			out += '</div></div>';
+			if(data.images) out += '<div class="oembedall-facebook-photo"><a href="'+data.link+'"><img class="oembedall-facebook-photo" src="'+data.images[0].source+'"></a></div>';
+			out += '</div>';
+			  
 			  return out;
 			}
 		 , getFbid: parseQueryStringFbid}),
