@@ -608,7 +608,7 @@
     
     /*** Video */
     new $.fn.oembed.OEmbedProvider("youtube", "video", ["youtube\\.com/watch.+v=[\\w-]+&?", "youtu\\.be/[\\w-]+"], 
-            'http://www.youtube.com/oembed', {useYQL:'json', parseUrl: parseQueryStringYoutube}), 
+            protocol+'//www.youtube.com/oembed', {useYQL:'json', parseUrl: parseQueryStringYoutube}), 
     new $.fn.oembed.OEmbedProvider("youtubeiframe", "video", ["youtube.com/embed"], "$1?wmode=transparent",
             {templateRegex:/(.*)/, embedtag : {tag: 'iframe', width:'425', height: '349'}, parseUrl: parseQueryStringYoutube}),    
     new $.fn.oembed.OEmbedProvider("wistia", "video", ["wistia.com/m/.+", "wistia.com/embed/.+", "wi.st/m/.+", "wi.st/embed/.+"],
@@ -916,15 +916,30 @@
                 {
                     var embed, type;					
 					var video_width, video_height, video_type;
-					// video
-					if (results['twitter:player']) embed = $('<embed src="'+results['twitter:player']+'"/>');
-					else var embed = $('<embed src="'+results['og:video']+'"/>');
-					// type
-					if (results['video_type']) type = results['video_type'];
-					else type = results['og:video:type'];
-					// video_width, video_height
-					if (results['video_width']) {video_width = results['video_width']; video_height = results['video_height'];}
-					else {video_width = results['og:video:width']; video_height = results['og:video:height'];}
+					if (results['og:site_name'] != "VEVO" && results['twitter:site'] != "@vevo") //for vevo no twitter cards
+					{
+						// video
+						if (results['twitter:player']) embed = $('<embed src="'+results['twitter:player']+'"/>');
+						else embed = $('<embed src="'+results['og:video']+'"/>');
+
+						// type
+						if (results['video_type']) type = results['video_type'];
+						else type = results['og:video:type'];
+						
+						// video_width, video_height
+						if (results['video_width']) {video_width = results['twitter:player:width']; video_height = results['twitter:player:height'];}
+						else {video_width = results['og:video:width']; video_height = results['og:video:height'];}
+					}
+					else {
+						// video
+						embed = $('<embed src="'+results['og:video']+'"/>');
+
+						// type
+						type = results['og:video:type'];
+						
+						// video_width, video_height
+						video_width = results['og:video:width']; video_height = results['og:video:height'];
+					}
 					
                     embed
                         .attr('type', type || "application/x-shockwave-flash" )
