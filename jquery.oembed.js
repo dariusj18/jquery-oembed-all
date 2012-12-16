@@ -599,7 +599,7 @@
     /* Native & common providers */
     $.fn.oembed.providers = [
     
-    //Video
+    /*** Video */
     new $.fn.oembed.OEmbedProvider("youtube", "video", ["youtube\\.com/watch.+v=[\\w-]+&?", "youtu\\.be/[\\w-]+"], 
             protocol+'//www.youtube.com/oembed', {useYQL:'json', parseUrl: parseQueryStringYoutube}), 
     new $.fn.oembed.OEmbedProvider("youtubeiframe", "video", ["youtube.com/embed"], "$1?wmode=transparent",
@@ -656,7 +656,7 @@
     new $.fn.oembed.OEmbedProvider("justin.tv", "video", ["justin.tv/.+"], 'http://api.justin.tv/api/embed/from_url.json',{useYQL:'json'}),
     
     
-    //Audio 
+    /*** Audio */
     new $.fn.oembed.OEmbedProvider("official.fm", "rich", ["official.fm/.+"], 'http://official.fm/services/oembed',{useYQL:'json'}),
     new $.fn.oembed.OEmbedProvider("chirbit", "rich", ["chirb.it/.+"], 'http://chirb.it/oembed.json',{useYQL:'json'}),
     new $.fn.oembed.OEmbedProvider("Huffduffer", "rich", ["huffduffer.com/[-.\\w@]+/\\d+"], "http://huffduffer.com/oembed"),
@@ -672,7 +672,7 @@
             }
         }),
     
-    //Photo
+    /*** Photo */
     new $.fn.oembed.OEmbedProvider("deviantart", "photo", ["deviantart.com/.+","fav.me/.+","deviantart.com/.+"], "http://backend.deviantart.com/oembed",{format:'jsonp'}),
     new $.fn.oembed.OEmbedProvider("skitch", "photo", ["skitch.com/.+"], null,
         {yql:{xpath:"json", from:'json'
@@ -681,7 +681,8 @@
              }
         }),
     new $.fn.oembed.OEmbedProvider("mobypicture", "photo", ["mobypicture.com/user/.+/view/.+","moby.to/.+"], "http://api.mobypicture.com/oEmbed"),
-    new $.fn.oembed.OEmbedProvider("flickr", "photo", ["flickr\\.com/photos/.+"], protocol+"//flickr.com/services/oembed", {callbackparameter:'jsoncallback'}),
+	//flickr protocol 'http'
+    new $.fn.oembed.OEmbedProvider("flickr", "photo", ["flickr\\.com/photos/.+"], "http://flickr.com/services/oembed", {callbackparameter:'jsoncallback'}),
     new $.fn.oembed.OEmbedProvider("photobucket", "photo", ["photobucket\\.com/(albums|groups)/.+"], protocol+"//photobucket.com/oembed/"),
     new $.fn.oembed.OEmbedProvider("instagram", "photo", ["instagr\\.?am(\\.com)?/.+"], protocol+"//api.instagram.com/oembed"),
     //new $.fn.oembed.OEmbedProvider("yfrog", "photo", ["yfrog\\.(com|ru|com\\.tr|it|fr|co\\.il|co\\.uk|com\\.pl|pl|eu|us)/.+"], protocol+"//www.yfrog.com/api/oembed",{useYQL:"json"}),
@@ -714,7 +715,7 @@
             }
         }),
       
-    //Rich
+    /*** Rich */
     new $.fn.oembed.OEmbedProvider("twitter", "rich", ["twitter.com/.+"], "https://api.twitter.com/1/statuses/oembed.json"),
     //new $.fn.oembed.OEmbedProvider("gmep", "rich", ["gmep.imeducate.com/.*"], "http://gmep.imeducate.com/oembed"),
     new $.fn.oembed.OEmbedProvider("urtak", "rich", ["urtak.com/(u|clr)/.+"], "http://oembed.urtak.com/1/oembed"),
@@ -895,40 +896,12 @@
     //Use Open Graph Where applicable
     new $.fn.oembed.OEmbedProvider("opengraph", "rich", [".*"], null,
     {yql:{xpath:"//meta|//title|//link", from:'html'
-            , datareturn:function(results){
-			
-/*	
-{"description":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
-"og:image":"http://pthumbnails.5min.com/10351989/517599432_3v1.jpg",
-"og:url":"http://on.aol.com/video/cringe-worthy-celebrity-interviews-of-2012--mashup--517599432",
-"og:title":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
-"og:type":"movie",
-"og:site_name":"aol.on",
-"og:description":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
-"og:video:width":"400","og:video:height":"255",
-"og:video:type":"application/x-shockwave-flash",
-"og:video":"http://embed.5min.com/517599432&autoStart=true",
-"og:video:secure_url":"https://embed.5min.com/517599432&autoStart=true",
+            , datareturn:function(results)
+			{
+				if(!results) return;
+				var json_string = JSON.stringify(results);  
+				//console.log(json_string);
 
-"fb:app_id":"197717190278167",
-
-"twitter:card":"player",
-"twitter:site":"@aolon",
-"twitter:url":"http://on.aol.com/video/cringe-worthy-celebrity-interviews-of-2012--mashup--517599432",
-"twitter:title":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
-"twitter:description":"Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)",
-"twitter:image":"http://pthumbnails.5min.com/10351989/517599432_3v1_262_262.jpg",
-"twitter:player":"https://embed.5min.com/517599432",
-"twitter:player:width":"400","twitter:player:height":"255",
-"video_width":"400","video_height":"255",
-"video_type":"application/x-shockwave-flash",
-"medium":"video","title":"AOL On - Cringe-Worthy Celebrity Interviews Of 2012 (MASHUP)"}
-*/
-			
-			  var json_string = JSON.stringify(results);
-              //if(data.error) { return JSON.stringify(data.error); }	  
-			  //console.log(json_string);
-			  //console.log(results['twitter:card']);
                 if(!results['og:title'] && !results['twitter:title'] && results['title'] && results['description']) results['og:title']=results['title'];
                 if(!results['og:title'] && !results['twitter:title'] && !results['title']) return false;
                 var code = $('<div class="oembed-og">');
