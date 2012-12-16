@@ -161,14 +161,17 @@
         var q2 = querystring[1]; // params
         if (!q1 || !q2) return url;
         var items = q2.split('&');
+		var len = items.length;
 
         var other_param="", v_param="";
-        for (var i in items) 
+		for (var i=0; i<len; i++)
         {
             var params = items[i];
             var pair = params.split('=');
-            if (pair[0] == "v") v_param = params + "&";
-            else other_param += params;		
+            if (pair[0] == "v" && len==1) v_param = params;
+			else if (pair[0] == "v") v_param = params + "&";
+			else if (len==1 || i==len-1) other_param += params;	
+			else other_param += params + "&";	
         }
         return (q1 + "?" + v_param + "" + other_param);
     }
@@ -550,40 +553,43 @@
         return null;
     };
 
+	/*
+	*  OEmbedProvider
+	*/
     $.fn.oembed.OEmbedProvider = function(name, type, urlschemesarray, apiendpoint, extraSettings) 
-    {
+	{
         this.name = name;
         this.type = type; // "photo", "video", "link", "rich", null
         this.urlschemes = urlschemesarray;
         this.apiendpoint = apiendpoint;
         this.maxWidth = 500;
         this.maxHeight = 400;
-        extraSettings = extraSettings ||{};
+        extraSettings =extraSettings ||{};
         
-        if (extraSettings.useYQL)
-        {  
-            if (extraSettings.useYQL=='xml'){
-                extraSettings.yql = {xpath:"//oembed/html", from:'xml'
-                , apiendpoint: this.apiendpoint
-                , url: function(externalurl){return this.apiendpoint+'?format=xml&url='+externalurl}
-                , datareturn:function(results){return results.html.replace(/.*\[CDATA\[(.*)\]\]>$/,'$1') || ''}
-                };
-            }
-            else{
-                extraSettings.yql = {from:'json'
-                , apiendpoint: this.apiendpoint
-                , url: function(externalurl){return this.apiendpoint+'?format=json&url='+externalurl}
-                , datareturn: function(results){
-                                if (results.json.url || results.json.thumbnail_url) {
-                                    return '<img src="' + (results.json.url || results.json.thumbnail_url) + '" />';
-                                }
-                                return results.json.html || '';
-                              }
-                };
-            }
+        if(extraSettings.useYQL)
+		{         
+          if(extraSettings.useYQL=='xml'){
+            extraSettings.yql = {xpath:"//oembed/html", from:'xml'
+            , apiendpoint: this.apiendpoint
+            , url: function(externalurl){return this.apiendpoint+'?format=xml&url='+externalurl}
+            , datareturn:function(results){return results.html.replace(/.*\[CDATA\[(.*)\]\]>$/,'$1') || ''}
+            };
+          }
+		  else{
+            extraSettings.yql = {from:'json'
+              , apiendpoint: this.apiendpoint
+              , url: function(externalurl){return this.apiendpoint+'?format=json&url='+externalurl}
+              , datareturn:function(results){
+					if (results.json.type != 'video' && (results.json.url || results.json.thumbnail_url)) {
+						return '<img src="' + (results.json.url || results.json.thumbnail_url) + '" />';
+					}
+					return results.json.html || ''
+				}
+            };
+          }
           this.apiendpoint = null;
         }
-        
+             
         for (var property in extraSettings) {
              this[property] = extraSettings[property];
         }
@@ -591,6 +597,7 @@
         this.format = this.format || 'json';
         this.callbackparameter = this.callbackparameter || "callback";
         this.embedtag = this.embedtag || {tag:""};
+     
     };
 
 	
@@ -601,7 +608,7 @@
     
     /*** Video */
     new $.fn.oembed.OEmbedProvider("youtube", "video", ["youtube\\.com/watch.+v=[\\w-]+&?", "youtu\\.be/[\\w-]+"], 
-            protocol+'//www.youtube.com/oembed', {useYQL:'json', parseUrl: parseQueryStringYoutube}), 
+            'http://www.youtube.com/oembed', {useYQL:'json', parseUrl: parseQueryStringYoutube}), 
     new $.fn.oembed.OEmbedProvider("youtubeiframe", "video", ["youtube.com/embed"], "$1?wmode=transparent",
             {templateRegex:/(.*)/, embedtag : {tag: 'iframe', width:'425', height: '349'}, parseUrl: parseQueryStringYoutube}),    
     new $.fn.oembed.OEmbedProvider("wistia", "video", ["wistia.com/m/.+", "wistia.com/embed/.+", "wi.st/m/.+", "wi.st/embed/.+"],
