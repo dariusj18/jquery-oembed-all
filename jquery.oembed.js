@@ -275,6 +275,18 @@
         settings.onEmbed.call(container, oembedData);
         settings.afterEmbed.call(container, oembedData);
     }
+	
+	/*
+	* check protocol
+    * @return The protocol correct.
+	*/
+	function checkProtocol()
+	{
+	    var protocol = window.location.protocol;
+		if (window.location.protocol == "https:") protocol = "https:";
+		if (window.location.protocol == "http:") protocol = "http:";
+		return protocol;
+	}
 
 	/*
 	*  embedCode
@@ -289,6 +301,7 @@
         }
         else if (embedProvider.yql) 
         {
+		    var protocol = checkProtocol(); // http: || https: 
             var from = embedProvider.yql.from || 'htmlstring';
             var url = embedProvider.yql.url ? embedProvider.yql.url(externalUrl) : externalUrl;
             var query = 'SELECT * FROM ' 
@@ -297,7 +310,7 @@
                 + " and " + (/html/.test(from) ? 'xpath' : 'itemPath') + "='" + (embedProvider.yql.xpath || '/')+"'" ;
             if(from=='html') query += " and compat='html5'";
             var ajaxopts = $.extend({
-            url: "http://query.yahooapis.com/v1/public/yql",
+            url: protocol+"//query.yahooapis.com/v1/public/yql",
             dataType: 'jsonp',
             data: {
                 q: query,
@@ -390,7 +403,6 @@
             {
 				//Add APIkey if true
 				if (embedProvider.apikey) embedProvider.apiendpoint = embedProvider.apiendpoint.replace('_APIKEY_', settings.apikeys[embedProvider.name]);
-				console.log(">embedProvider.apiendpoint");
 				var link;
 				var url = externalUrl.replace(embedProvider.templateRegex, embedProvider.apiendpoint);
 				if (embedProvider.getFbid) link = embedProvider.getFbid(url); // for facebook
@@ -624,8 +636,9 @@
     new $.fn.oembed.OEmbedProvider("funnyordie", "video", ["funnyordie\\.com/videos/.+"], "http://player.ordienetworks.com/flash/fodplayer.swf?", {
     templateRegex: /.*videos\/([^\/]+)\/([^\/]+)?/,embedtag: {width: 512,height: 328,flashvars: "key=$1"}}),    
     new $.fn.oembed.OEmbedProvider("colledgehumour", "video", ["collegehumor\\.com/video/.+"], "http://www.collegehumor.com/moogaloop/moogaloop.swf?clip_id=$1&use_node_id=true&fullscreen=1",
-    {templateRegex:/.*video\/([^\/]+).*/ , embedtag : {width:600,height: 338}}),   
-    new $.fn.oembed.OEmbedProvider("metacafe", "video", ["metacafe\\.com/watch/.+"], protocol+"//www.metacafe.com/fplayer/$1/$2.swf", 
+    {templateRegex:/.*video\/([^\/]+).*/ , embedtag : {width:600,height: 338}}),  
+	//metacafe protocol 'http'	
+    new $.fn.oembed.OEmbedProvider("metacafe", "video", ["metacafe\\.com/watch/.+"], "http://www.metacafe.com/fplayer/$1/$2.swf", 
             {templateRegex:/.*watch\/(\d+)\/(\w+)\/.*/ , embedtag : {width:400,height: 345}}),    
     new $.fn.oembed.OEmbedProvider("bambuser", "video", ["bambuser\\.com\/channel\/.*\/broadcast\/.*"], 
             "http://static.bambuser.com/r/player.swf?vid=$1", 
@@ -645,7 +658,8 @@
     new $.fn.oembed.OEmbedProvider("blip", "video", ["blip\\.tv/.+"], "http://blip.tv/oembed/"),   
     new $.fn.oembed.OEmbedProvider("minoto-video", "video", ["http://api.minoto-video.com/publishers/.+/videos/.+","http://dashboard.minoto-video.com/main/video/details/.+","http://embed.minoto-video.com/.+"], "http://api.minoto-video.com/services/oembed.json",{useYQL:'json'}),    
     new $.fn.oembed.OEmbedProvider("animoto", "video", ["animoto.com/play/.+"], "http://animoto.com/services/oembed"),
-    new $.fn.oembed.OEmbedProvider("hulu", "video", ["hulu\\.com/watch/.*"], protocol+"//www.hulu.com/api/oembed.json"),    
+	//hulu protocol 'http'	
+    new $.fn.oembed.OEmbedProvider("hulu", "video", ["hulu\\.com/watch/.*"], "http://www.hulu.com/api/oembed.json"),    
     new $.fn.oembed.OEmbedProvider("ustream", "video", ["ustream\\.tv/recorded/.*"], "http://www.ustream.tv/oembed",{useYQL:'json'}),  
     new $.fn.oembed.OEmbedProvider("vodpod", "video", ["vodpod.com/watch/.*"], "http://vodpod.com/oembed.js",{useYQL:'json'}),	
     new $.fn.oembed.OEmbedProvider("vimeo", "video", ["http:\/\/www\.vimeo\.com\/groups\/.*\/videos\/.*", "http:\/\/www\.vimeo\.com\/.*", "http:\/\/vimeo\.com\/groups\/.*\/videos\/.*", "http:\/\/vimeo\.com\/.*"], 
