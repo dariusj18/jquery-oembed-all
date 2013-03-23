@@ -587,8 +587,7 @@
       }), 
     new $.fn.oembed.OEmbedProvider("twitgoo.com", "photo", ["twitgoo\\.com/.+"],"http://twitgoo.com/show/thumb/$1",
       {templateRegex:/.*com\/([^\/]+).*/ , embedtag : {tag:'img'},nocache:1}), 
-    new $.fn.oembed.OEmbedProvider("imgur.com", "photo", ["imgur\\.com/gallery/.+"],"http://imgur.com/$1l.jpg",
-      {templateRegex:/.*gallery\/([^\/]+).*/ , embedtag : {tag:'img'},nocache:1}), 
+	new $.fn.oembed.OEmbedProvider("imgur.com", "photo", ["imgur\\.com/.+"], "http://api.imgur.com/oembed", {useYQL:"json"}),
     new $.fn.oembed.OEmbedProvider("visual.ly", "rich", ["visual\\.ly/.+"], null,
       {yql:{xpath:"//a[@id=\\'gc_article_graphic_image\\']/img", from:'htmlstring'}
       }),
